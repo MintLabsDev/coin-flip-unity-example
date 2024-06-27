@@ -92,7 +92,7 @@ However, when you make cpi into rng program the order of these accounts and thei
         RequestResult<string> firstSig = await rpcClient.SendTransactionAsync(tx);
 
            
-#Coin flip program
+# Coin flip program
 
 We get our accounts
 

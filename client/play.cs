@@ -9,12 +9,15 @@ using System;
 using System.Linq;
 using System.Text;
 using Solana.Unity.Programs.Utilities;
+using Solana.Unity.Rpc.Builders;
+using Solana.Unity.Rpc.Core.Http;
+
 
 
 
 public class RNG_Client : MonoBehaviour
 {
-   private static readonly IRpcClient rpcClient = ClientFactory.GetClient(Cluster.TestNet);
+   private static readonly IRpcClient rpcClient = ClientFactory.GetClient(Cluster.DevNet);
 
     Account player;
 
@@ -22,6 +25,9 @@ public class RNG_Client : MonoBehaviour
     private PublicKey coin_flip_programId = new PublicKey("5uNCDQwxG8dgdFsAYMzb6DS442bLbRp85P2dAn15rt4d");
     private PublicKey current_feed_account;
     private byte bump;
+
+
+    public ulong decision;
 
     public async void Play()
     {
@@ -38,18 +44,26 @@ public class RNG_Client : MonoBehaviour
 
        byte[] encoded_data = Convert.FromBase64String(data.First());
 
-        Account temp =  new Account();
-
 
         var account1 = Deserialization.GetPubKey(encoded_data, 17);
         var account2 = Deserialization.GetPubKey(encoded_data, 49);
         var account3 = Deserialization.GetPubKey(encoded_data, 81);
         var fallback_account = Deserialization.GetPubKey(encoded_data, 113);
 
-           TransactionInstruction ix = new TransactionInstruction
+        Account temp =  new Account();
+
+        byte[] buffer = new byte[8]; // Ensure the buffer is large enough for a u64 (8 bytes)
+
+        
+
+        Serialization.WriteU64(buffer, decision, 0);
+        
+
+
+        var ix = new TransactionInstruction
            {
                 ProgramId = coin_flip_programId,
-                Keys = {AccountMeta.Writable(player.PublicKey,isSigner:true),
+                Keys = new List<AccountMeta>{AccountMeta.Writable(player.PublicKey,isSigner:true),
                         AccountMeta.ReadOnly(account1,isSigner:false),
                         AccountMeta.ReadOnly(account2,isSigner:false),
                         AccountMeta.ReadOnly(account3,isSigner:false),
@@ -59,8 +73,20 @@ public class RNG_Client : MonoBehaviour
                         AccountMeta.ReadOnly(rng_programId,isSigner:false),
                         AccountMeta.ReadOnly(SystemProgram.ProgramIdKey,isSigner:false),
                  },
-                Data= {}
+                Data = buffer
            };
+        
+
+       var tx = new TransactionBuilder()
+            .SetRecentBlockHash((await rpcClient.GetLatestBlockHashAsync()).Result.Value.Blockhash)
+            .SetFeePayer(player.PublicKey)
+            .AddInstruction(ix)
+            .Build(new List<Account> { player,temp });
+
+
+
+        RequestResult<string> firstSig = await rpcClient.SendTransactionAsync(tx);
+
 
     }
 

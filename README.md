@@ -12,7 +12,7 @@ You compare the returned random number with the user's decision in coinflip prog
 Finally coin flip program logs a message according to result.
 THIS ALL HAPPENS IN ONE TRANSACTION.
 You can store the random number in an account in your program.
-You can also try coinflip program on Devnet and testnet.
+You can also try coinflip program on Devnet and Testnet.
 
 Now lets take a look at how we use FPRNG in coinflip game program
 

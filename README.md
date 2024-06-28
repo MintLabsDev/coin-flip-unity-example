@@ -1,8 +1,8 @@
 # coin-flip-unity-example
-A simple coin flip game using feed protocol random number generator with Solana Unity SDK and rust solana-program package
+A simple coin flip game using  FEED PROTOCOL RANDOM NUMBER GENERATOR  with Solana Unity SDK and rust solana-program package
 
 
-Implementing Feed Protocol RANDOM NUMBER GENERATOR PROGRAM (FPRNG) to your program is very easy. You derive the needed accounts and pass into the instruction. And then in your program make a CPI to FPRNG. 
+Implementing FEED PROTOCOL RANDOM NUMBER GENERATOR PROGRAM (FPRNG) to your program is very easy. You derive the needed accounts and pass into the instruction. And then in your program make a CPI to FPRNG. 
 In these simple example program we will cover every step of the implamaentation.
 Lets say you want to build an on-chain coin flip game. 
 First user chooses heads or tails and send this decision to your coinflip program. 
@@ -12,7 +12,7 @@ You compare the returned random number with the user's decision in coinflip prog
 Finally coin flip program logs a message according to result.
 THIS ALL HAPPENS IN ONE TRANSACTION.
 You can store the random number in an account in your program.
-You can also try coinflip program on devnet and testnet
+You can also try coinflip program on Devnet and testnet.
 
 Now lets take a look at how we use FPRNG in coinflip game program
 

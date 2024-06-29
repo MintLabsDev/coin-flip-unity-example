@@ -1,4 +1,4 @@
-# coin-flip-unity-example
+# Coin Flip Unity Example
 A simple coin flip game using  FEED PROTOCOL RANDOM NUMBER GENERATOR  with Solana Unity SDK and rust solana-program package
 
 

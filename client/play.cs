@@ -21,7 +21,7 @@ public class RNG_Client : MonoBehaviour
 
     Account player;
 
-    private PublicKey rng_programId = new PublicKey("9uSwASSU59XvUS8d1UeU8EwrEzMGFdXZvQ4JSEAfcS7k");
+    private PublicKey rng_programId = new PublicKey("FEED1qspts3SRuoEyG29NMNpsTKX8yG9NGMinNC4GeYB");
     private PublicKey coin_flip_programId = new PublicKey("5uNCDQwxG8dgdFsAYMzb6DS442bLbRp85P2dAn15rt4d");
     private PublicKey current_feed_account;
     private byte bump;

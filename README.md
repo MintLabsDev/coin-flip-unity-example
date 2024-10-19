@@ -24,7 +24,7 @@ Let players decide on your game interface
 
 FPRNG address(It is the same address for devnet, testnet and mainnet-beta)
 
-        private PublicKey rng_programId = new PublicKey("9uSwASSU59XvUS8d1UeU8EwrEzMGFdXZvQ4JSEAfcS7k");
+        private PublicKey rng_programId = new PublicKey("FEED1qspts3SRuoEyG29NMNpsTKX8yG9NGMinNC4GeYB");
 
 Deriving a PDA that store the required feed accounts
 

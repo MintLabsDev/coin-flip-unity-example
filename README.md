@@ -3,7 +3,7 @@ A simple coin flip game using  FEED PROTOCOL RANDOM NUMBER GENERATOR  with Solan
 
 
 Implementing FEED PROTOCOL RANDOM NUMBER GENERATOR PROGRAM (FPRNG) to your program is very easy. You derive the needed accounts and pass into the instruction. And then in your program make a CPI to FPRNG. 
-In these simple example program we will cover every step of the implamaentation.
+In these simple example program we will cover every step of the implementation.
 Lets say you want to build an on-chain coin flip game. 
 First user chooses heads or tails and send this decision to your coinflip program. 
 Your coin flip program calls FPRNG. 
@@ -20,37 +20,21 @@ Now lets take a look at how we use FPRNG in coinflip game program
 
 Let players decide on your game interface
 
-        public ulong public ulong decision;
+        public ulong decision;
 
-FPRNG address(It is the same address for devnet, testnet and mainnet-beta)
+FPRNG addresses(It is the same address for devnet, testnet and mainnet-beta). 
 
         private PublicKey rng_programId = new PublicKey("FEED1qspts3SRuoEyG29NMNpsTKX8yG9NGMinNC4GeYB");
+        private PublicKey entropy_account = new PublicKey("CTyyJKQHo6JhtVYBaXcota9NozebV3vHF872S8ag2TUS");
+        private PublicKey fee_account = new PublicKey("WjtcArL5m5peH8ZmAdTtyFF9qjyNxjQ2qp4Gz1YEQdy");
 
-Deriving a PDA that store the required feed accounts
+entropy_account and fee_account are PDAs. You can also derive them as below
 
-        byte[] seed1 = Encoding.UTF8.GetBytes("c");
-        byte[] seed2 = new byte[] { 1 };
-
-       PublicKey.TryFindProgramAddress(new List<byte[]>{seed1,seed2},rng_programId, out current_feed_account, out bump);
-
-Getting account_info from the blockchain
-
-       var result = await  rpcClient.GetAccountInfoAsync(current_feed_account);
-       var data = result.Result.Value.Data;
-
-       byte[] encoded_data = Convert.FromBase64String(data.First());
-
-
-Parsing required data from the account data
-
-        var account1 = Deserialization.GetPubKey(encoded_data, 17);
-        var account2 = Deserialization.GetPubKey(encoded_data, 49);
-        var account3 = Deserialization.GetPubKey(encoded_data, 81);
-        var fallback_account = Deserialization.GetPubKey(encoded_data, 113);
-
-Generating a keypair to use in FPRNG
-
-        Account temp =  new Account();
+        byte[] entropy_account_seed = Encoding.UTF8.GetBytes("entropy");
+        byte[] fee_account_seed = Encoding.UTF8.GetBytes("f");
+        
+        PublicKey.TryFindProgramAddress(new List<byte[]>{entropy_account_seed},rng_programId, out entropy_account, out entropy_account_bump);
+        PublicKey.TryFindProgramAddress(new List<byte[]>{fee_account_seed},rng_programId, out fee_account, out fee_account_bump);
 
 # Creating Instruction
 
@@ -68,12 +52,8 @@ However, when you make cpi into FPRNG the order of these accounts and their prop
            {
                 ProgramId = coin_flip_programId,
                 Keys = new List<AccountMeta>{AccountMeta.Writable(player.PublicKey,isSigner:true),
-                        AccountMeta.ReadOnly(account1,isSigner:false),
-                        AccountMeta.ReadOnly(account2,isSigner:false),
-                        AccountMeta.ReadOnly(account3,isSigner:false),
-                        AccountMeta.ReadOnly(fallback_account,isSigner:false),
-                        AccountMeta.Writable(current_feed_account,isSigner:false),
-                        AccountMeta.Writable(temp.PublicKey,isSigner:true),
+                        AccountMeta.Writable(entropy_account_seed,isSigner:false),
+                        AccountMeta.Writable(fee_account,isSigner:false),
                         AccountMeta.ReadOnly(rng_programId,isSigner:false),
                         AccountMeta.ReadOnly(SystemProgram.ProgramIdKey,isSigner:false),
                  },
@@ -85,7 +65,7 @@ However, when you make cpi into FPRNG the order of these accounts and their prop
             .SetRecentBlockHash((await rpcClient.GetLatestBlockHashAsync()).Result.Value.Blockhash)
             .SetFeePayer(player.PublicKey)
             .AddInstruction(ix)
-            .Build(new List<Account> { player,temp });
+            .Build(new List<Account> { player });
 
 
 
@@ -94,30 +74,25 @@ However, when you make cpi into FPRNG the order of these accounts and their prop
            
 # Coin flip program
 
+
 We get our accounts
+
 
   let accounts_iter: &mut std::slice::Iter<'_, AccountInfo<'_>> = &mut accounts.iter();
 
     let payer: &AccountInfo<'_> = next_account_info(accounts_iter)?;
-    let price_feed_account_1: &AccountInfo<'_> = next_account_info(accounts_iter)?;
-    let price_feed_account_2: &AccountInfo<'_> = next_account_info(accounts_iter)?;
-    let price_feed_account_3: &AccountInfo<'_> = next_account_info(accounts_iter)?;
-    let fallback_account: &AccountInfo<'_> = next_account_info(accounts_iter)?;
-    let current_feed_accounts: &AccountInfo<'_> = next_account_info(accounts_iter)?;
-    let temp: &AccountInfo<'_> = next_account_info(accounts_iter)?;
+    let entropy_account: &AccountInfo<'_> = next_account_info(accounts_iter)?;
+    let fee_account: &AccountInfo<'_> = next_account_info(accounts_iter)?;
     let rng_program: &AccountInfo<'_> = next_account_info(accounts_iter)?;
     let system_program: &AccountInfo<'_> = next_account_info(accounts_iter)?;
 
 Creating account metas for CPI to FPRNG
 
     let payer_meta = AccountMeta{ pubkey: *payer.key, is_signer: true, is_writable: true,};
-    let price_feed_account_1_meta = AccountMeta{ pubkey: *price_feed_account_1.key, is_signer: false, is_writable: false,};
-    let price_feed_account_2_meta = AccountMeta{ pubkey: *price_feed_account_2.key, is_signer: false, is_writable: false,};
-    let price_feed_account_3_meta = AccountMeta{ pubkey: *price_feed_account_3.key, is_signer: false, is_writable: false,};
-    let fallback_account_meta = AccountMeta{ pubkey: *fallback_account.key, is_signer: false, is_writable: false,};
-    let current_feed_accounts_meta = AccountMeta{ pubkey: *current_feed_accounts.key, is_signer: false, is_writable: true,};
-    let temp_meta = AccountMeta{ pubkey: *temp.key, is_signer: true, is_writable: true,};
+    let entropy_account_meta = AccountMeta{ pubkey: *entropy_account.key, is_signer: false, is_writable: true,};
+    let fee_account_meta = AccountMeta{ pubkey: *fee_account.key, is_signer: false, is_writable: true,};
     let system_program_meta = AccountMeta{ pubkey: *system_program.key, is_signer: false, is_writable: false,};
+
 
 
 Creating instruction to cpi FPRNG
@@ -125,26 +100,18 @@ Creating instruction to cpi FPRNG
     let ix:Instruction = Instruction { program_id: *rng_program.key,
        accounts: [
         payer_meta,
-        price_feed_account_1_meta,
-        price_feed_account_2_meta,
-        price_feed_account_3_meta,
-        fallback_account_meta,
-        current_feed_accounts_meta,
-        temp_meta,
+        entropy_account_meta,
+        fee_account_meta,
         system_program_meta,
-       ].to_vec(), data: [0].to_vec() };
+       ].to_vec(), data: [100].to_vec() };
 
 CPI to FPRNG
 
     invoke(&ix, 
       &[
         payer.clone(),
-        price_feed_account_1.clone(),
-        price_feed_account_2.clone(),
-        price_feed_account_3.clone(),
-        fallback_account.clone(),
-        current_feed_accounts.clone(),
-        temp.clone(),
+        entropy_account.clone(),
+        fee_account.clone(),
         system_program.clone()
         ])?;
 

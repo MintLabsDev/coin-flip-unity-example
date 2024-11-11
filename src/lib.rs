@@ -25,23 +25,15 @@ pub struct PlayersDecision{
     let accounts_iter: &mut std::slice::Iter<'_, AccountInfo<'_>> = &mut accounts.iter();
 
     let payer: &AccountInfo<'_> = next_account_info(accounts_iter)?;
-    let price_feed_account_1: &AccountInfo<'_> = next_account_info(accounts_iter)?;
-    let price_feed_account_2: &AccountInfo<'_> = next_account_info(accounts_iter)?;
-    let price_feed_account_3: &AccountInfo<'_> = next_account_info(accounts_iter)?;
-    let fallback_account: &AccountInfo<'_> = next_account_info(accounts_iter)?;
-    let current_feed_accounts: &AccountInfo<'_> = next_account_info(accounts_iter)?;
-    let temp: &AccountInfo<'_> = next_account_info(accounts_iter)?;
+    let entropy_account: &AccountInfo<'_> = next_account_info(accounts_iter)?;
+    let fee_account: &AccountInfo<'_> = next_account_info(accounts_iter)?;
     let rng_program: &AccountInfo<'_> = next_account_info(accounts_iter)?;
     let system_program: &AccountInfo<'_> = next_account_info(accounts_iter)?;
 
     //Creating account metas for CPI to RNG_PROGRAM
     let payer_meta = AccountMeta{ pubkey: *payer.key, is_signer: true, is_writable: true,};
-    let price_feed_account_1_meta = AccountMeta{ pubkey: *price_feed_account_1.key, is_signer: false, is_writable: false,};
-    let price_feed_account_2_meta = AccountMeta{ pubkey: *price_feed_account_2.key, is_signer: false, is_writable: false,};
-    let price_feed_account_3_meta = AccountMeta{ pubkey: *price_feed_account_3.key, is_signer: false, is_writable: false,};
-    let fallback_account_meta = AccountMeta{ pubkey: *fallback_account.key, is_signer: false, is_writable: false,};
-    let current_feed_accounts_meta = AccountMeta{ pubkey: *current_feed_accounts.key, is_signer: false, is_writable: true,};
-    let temp_meta = AccountMeta{ pubkey: *temp.key, is_signer: true, is_writable: true,};
+    let entropy_account_meta = AccountMeta{ pubkey: *entropy_account.key, is_signer: false, is_writable: true,};
+    let fee_account_meta = AccountMeta{ pubkey: *fee_account.key, is_signer: false, is_writable: true,};
     let system_program_meta = AccountMeta{ pubkey: *system_program.key, is_signer: false, is_writable: false,};
 
 
@@ -49,25 +41,17 @@ pub struct PlayersDecision{
     let ix:Instruction = Instruction { program_id: *rng_program.key,
        accounts: [
         payer_meta,
-        price_feed_account_1_meta,
-        price_feed_account_2_meta,
-        price_feed_account_3_meta,
-        fallback_account_meta,
-        current_feed_accounts_meta,
-        temp_meta,
+        entropy_account_meta,
+        fee_account_meta,
         system_program_meta,
-       ].to_vec(), data: [0].to_vec() };
+       ].to_vec(), data: [100].to_vec() };
 
     //CPI to RNG_PROGRAM
     invoke(&ix, 
       &[
         payer.clone(),
-        price_feed_account_1.clone(),
-        price_feed_account_2.clone(),
-        price_feed_account_3.clone(),
-        fallback_account.clone(),
-        current_feed_accounts.clone(),
-        temp.clone(),
+        entropy_account.clone(),
+        fee_account.clone(),
         system_program.clone()
         ])?;
 

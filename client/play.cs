@@ -23,8 +23,9 @@ public class RNG_Client : MonoBehaviour
 
     private PublicKey rng_programId = new PublicKey("FEED1qspts3SRuoEyG29NMNpsTKX8yG9NGMinNC4GeYB");
     private PublicKey coin_flip_programId = new PublicKey("5uNCDQwxG8dgdFsAYMzb6DS442bLbRp85P2dAn15rt4d");
-    private PublicKey current_feed_account;
-    private byte bump;
+    private PublicKey entropy_account = new PublicKey("CTyyJKQHo6JhtVYBaXcota9NozebV3vHF872S8ag2TUS");
+    private PublicKey fee_account = new PublicKey("WjtcArL5m5peH8ZmAdTtyFF9qjyNxjQ2qp4Gz1YEQdy");
+
 
 
     public ulong decision;
@@ -33,28 +34,23 @@ public class RNG_Client : MonoBehaviour
     {
 
 
-        byte[] seed1 = Encoding.UTF8.GetBytes("c");
-        byte[] seed2 = new byte[] { 1 };
+       /*
+        Entropy account and fee accounts are PDAs. You can also derive them as below
 
-       PublicKey.TryFindProgramAddress(new List<byte[]>{seed1,seed2},rng_programId, out current_feed_account, out bump);
+        private PublicKey entropy_account;
+        private PublicKey fee_account;
+        private byte entropy_account_bump;
+        private byte fee_account_bump;
 
+        byte[] entropy_account_seed = Encoding.UTF8.GetBytes("entropy");
+        byte[] fee_account_seed = Encoding.UTF8.GetBytes("f");
 
-       var result = await  rpcClient.GetAccountInfoAsync(current_feed_account);
-       var data = result.Result.Value.Data;
-
-       byte[] encoded_data = Convert.FromBase64String(data.First());
-
-
-        var account1 = Deserialization.GetPubKey(encoded_data, 17);
-        var account2 = Deserialization.GetPubKey(encoded_data, 49);
-        var account3 = Deserialization.GetPubKey(encoded_data, 81);
-        var fallback_account = Deserialization.GetPubKey(encoded_data, 113);
-
-        Account temp =  new Account();
+        PublicKey.TryFindProgramAddress(new List<byte[]>{entropy_account_seed},rng_programId, out entropy_account, out entropy_account_bump);
+        PublicKey.TryFindProgramAddress(new List<byte[]>{fee_account_seed},rng_programId, out fee_account, out fee_account_bump);
+      */
 
         byte[] buffer = new byte[8]; // Ensure the buffer is large enough for a u64 (8 bytes)
 
-        
 
         Serialization.WriteU64(buffer, decision, 0);
         
@@ -64,12 +60,8 @@ public class RNG_Client : MonoBehaviour
            {
                 ProgramId = coin_flip_programId,
                 Keys = new List<AccountMeta>{AccountMeta.Writable(player.PublicKey,isSigner:true),
-                        AccountMeta.ReadOnly(account1,isSigner:false),
-                        AccountMeta.ReadOnly(account2,isSigner:false),
-                        AccountMeta.ReadOnly(account3,isSigner:false),
-                        AccountMeta.ReadOnly(fallback_account,isSigner:false),
-                        AccountMeta.Writable(current_feed_account,isSigner:false),
-                        AccountMeta.Writable(temp.PublicKey,isSigner:true),
+                        AccountMeta.Writable(entropy_account_seed,isSigner:false),
+                        AccountMeta.Writable(fee_account,isSigner:false),
                         AccountMeta.ReadOnly(rng_programId,isSigner:false),
                         AccountMeta.ReadOnly(SystemProgram.ProgramIdKey,isSigner:false),
                  },
@@ -81,7 +73,7 @@ public class RNG_Client : MonoBehaviour
             .SetRecentBlockHash((await rpcClient.GetLatestBlockHashAsync()).Result.Value.Blockhash)
             .SetFeePayer(player.PublicKey)
             .AddInstruction(ix)
-            .Build(new List<Account> { player,temp });
+            .Build(new List<Account> { player });
 
 
 
@@ -109,4 +101,5 @@ public class RNG_Client : MonoBehaviour
 
 
 }
+
 
